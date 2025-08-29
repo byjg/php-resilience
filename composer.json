@@ -1,0 +1,25 @@
+{
+  "name": "byjg/php-resilience",
+  "description": "PHP Resilience library",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.1 <8.5"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5|^11.5|^12.3",
+    "vimeo/psalm": "^5.9|^6.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "ByJG\\Resilience\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "ByJG\\Resilience\\Tests\\": "tests/"
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
