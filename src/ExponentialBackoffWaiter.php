@@ -15,12 +15,16 @@ class ExponentialBackoffWaiter
     private int $maxTotalWaitMicros;
     private float $multiplier;
     private ?int $maxDelayMicros;
+    private Jitter $jitter;
 
     /** @var callable(int $micros): void */
     private $sleepFn;
 
     /** @var callable(): float Returns current time in seconds with micro precision (like microtime(true)) */
     private $timeFn;
+
+    /** @var callable(int $min, int $max): int */
+    private $randomFn;
 
     /**
      * @param int $initialDelayMicros   Initial delay in microseconds (e.g., 200_000 for 200ms)
@@ -29,6 +33,11 @@ class ExponentialBackoffWaiter
      * @param int|null $maxDelayMicros  Optional cap for an individual sleep delay (microseconds)
      * @param callable|null $sleepFn    Injectable sleep function taking microseconds (defaults to usleep)
      * @param callable|null $timeFn     Injectable time provider returning float seconds (defaults to microtime(true))
+     * @param Jitter $jitter            Randomness applied to each sleep, to stop callers retrying in lockstep.
+     *                                  Defaults to Jitter::None so existing timing is unchanged unless asked for.
+     * @param callable|null $randomFn   Injectable randomness taking (min, max) and returning an int in that
+     *                                  inclusive range (defaults to random_int). Injecting it keeps jittered
+     *                                  runs deterministic under test.
      */
     public function __construct(
         int $initialDelayMicros = 200_000,
@@ -36,7 +45,9 @@ class ExponentialBackoffWaiter
         float $multiplier = 2.0,
         ?int $maxDelayMicros = null,
         ?callable $sleepFn = null,
-        ?callable $timeFn = null
+        ?callable $timeFn = null,
+        Jitter $jitter = Jitter::None,
+        ?callable $randomFn = null
     ) {
         if ($initialDelayMicros <= 0) {
             throw new \InvalidArgumentException('initialDelayMicros must be > 0');
@@ -60,6 +71,10 @@ class ExponentialBackoffWaiter
         };
         $this->timeFn = $timeFn ?? static function (): float {
             return microtime(true);
+        };
+        $this->jitter = $jitter;
+        $this->randomFn = $randomFn ?? static function (int $min, int $max): int {
+            return random_int($min, $max);
         };
     }
 
@@ -96,7 +111,7 @@ class ExponentialBackoffWaiter
                 break;
             }
 
-            ($this->sleepFn)(min($delay, $remainingMicros));
+            ($this->sleepFn)(min($this->applyJitter($delay), $remainingMicros));
 
             $value = $operation();
             if ($isSuccess($value)) {
@@ -116,6 +131,33 @@ class ExponentialBackoffWaiter
 
     private function capDelay(int $micros): int
     {
+        // The total budget is an implicit ceiling: a single sleep is clamped to whatever remains of
+        // it anyway, so growing the delay past it buys nothing. Without this the series overflows -
+        // jitter can make each sleep far shorter than the delay it was derived from, so the loop
+        // iterates many more times than the series expects and $delay doubles past PHP_INT_MAX.
+        $micros = min($micros, $this->maxTotalWaitMicros);
+
         return $this->maxDelayMicros !== null ? min($micros, $this->maxDelayMicros) : $micros;
+    }
+
+    /**
+     * Randomise a single sleep without disturbing the growth series.
+     *
+     * $delay itself keeps multiplying deterministically; only the value handed to sleep is
+     * randomised. That is what lets the backoff still escalate as configured while the callers
+     * spread out across the interval instead of arriving together.
+     *
+     * Never returns 0: a zero-length sleep would retry the operation immediately, turning an
+     * unlucky draw into a burst against the very dependency the backoff is protecting.
+     */
+    private function applyJitter(int $delay): int
+    {
+        $jittered = match ($this->jitter) {
+            Jitter::None => $delay,
+            Jitter::Full => ($this->randomFn)(0, $delay),
+            Jitter::Equal => intdiv($delay, 2) + ($this->randomFn)(0, intdiv($delay, 2)),
+        };
+
+        return max(1, $jittered);
     }
 }
