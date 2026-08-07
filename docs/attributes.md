@@ -39,7 +39,16 @@ $result = ExponentialBackoffExecutor::callWithAttributes($svc, 'fetch', args: ['
 ```
 
 Parameters mirror the [waiter](exponential-backoff.md#constructor): `initialDelayMicros`,
-`maxTotalWaitMicros`, `multiplier`, `maxDelayMicros`, and `throwOnTimeout`.
+`maxTotalWaitMicros`, `multiplier`, `maxDelayMicros`, `throwOnTimeout`, and `jitter`.
+
+```php
+#[ExponentialBackoff(maxTotalWaitMicros: 3_500_000, jitter: Jitter::Full)]
+public function fetch(string $id): ?string { /* ... */ }
+```
+
+The waiter's `randomFn` has no attribute equivalent — attribute arguments must be constant
+expressions, and a callable cannot be written as one. The default `random_int` is what production
+wants; a test needing deterministic jitter passes a fully configured waiter via `waiterOverride`.
 
 Success is judged by the same default rule — the return value is not `null`. Supply a predicate
 through the executor when that is not the right test:

@@ -40,12 +40,7 @@ class ExponentialBackoffExecutor
             return $refMethod->invokeArgs(is_object($classOrObject) ? $classOrObject : null, $args);
         }
 
-        $waiter = $waiterOverride ?? new ExponentialBackoffWaiter(
-            initialDelayMicros: $attr->initialDelayMicros,
-            maxTotalWaitMicros: $attr->maxTotalWaitMicros,
-            multiplier: $attr->multiplier,
-            maxDelayMicros: $attr->maxDelayMicros
-        );
+        $waiter = $waiterOverride ?? self::waiterFrom($attr);
 
         $operation = function () use ($refMethod, $classOrObject, $args) {
             return $refMethod->invokeArgs(is_object($classOrObject) ? $classOrObject : null, $args);
@@ -80,12 +75,7 @@ class ExponentialBackoffExecutor
                 return $refFunction->invokeArgs($args);
             }
 
-            $waiter = $waiterOverride ?? new ExponentialBackoffWaiter(
-                initialDelayMicros: $attr->initialDelayMicros,
-                maxTotalWaitMicros: $attr->maxTotalWaitMicros,
-                multiplier: $attr->multiplier,
-                maxDelayMicros: $attr->maxDelayMicros
-            );
+            $waiter = $waiterOverride ?? self::waiterFrom($attr);
 
             $operation = function () use ($refFunction, $args) {
                 return $refFunction->invokeArgs($args);
@@ -96,6 +86,24 @@ class ExponentialBackoffExecutor
 
         // For other callable types (like closures), attributes aren't reflected; just invoke directly
         return $functionCallable(...$args);
+    }
+
+    /**
+     * Build the waiter an attribute describes.
+     *
+     * Kept in one place because it was written out twice, and the duplication is exactly how the
+     * jitter setting came to be silently dropped on both paths: adding a parameter to the attribute
+     * meant remembering to thread it through two identical constructor calls.
+     */
+    private static function waiterFrom(ExponentialBackoffAttribute $attr): ExponentialBackoffWaiter
+    {
+        return new ExponentialBackoffWaiter(
+            initialDelayMicros: $attr->initialDelayMicros,
+            maxTotalWaitMicros: $attr->maxTotalWaitMicros,
+            multiplier: $attr->multiplier,
+            maxDelayMicros: $attr->maxDelayMicros,
+            jitter: $attr->jitter
+        );
     }
 
     private static function findAttribute(ReflectionMethod|ReflectionFunction $ref): ?ExponentialBackoffAttribute
