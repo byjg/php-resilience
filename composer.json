@@ -4,16 +4,22 @@
   "type": "library",
   "license": "MIT",
   "require": {
-    "php": ">=8.3 <8.6",
+    "php": ">=8.3 <8.7",
     "psr/simple-cache": "^3.0"
   },
   "require-dev": {
     "byjg/cache-engine": "^7.0",
-    "phpunit/phpunit": "^10.5|^11.5|^12.3",
-    "vimeo/psalm": "^5.9|^6.2"
+    "phpunit/phpunit": "^12.5"
   },
   "suggest": {
     "byjg/cache-engine": "Provides CompareAndSwapInterface, the atomic primitive CacheEngineLockStore needs for a race-free Mutex"
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit",
+    "psalm": [
+      "@composer --working-dir=tools/psalm update --no-interaction",
+      "tools/psalm/vendor/bin/psalm"
+    ]
   },
   "autoload": {
     "psr-4": {

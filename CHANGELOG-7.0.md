@@ -13,7 +13,7 @@ not ready yet, and something must happen only once.
 
 | | |
 |---|---|
-| PHP | `>=8.3 <8.6` |
+| PHP | `>=8.3 <8.7` — 8.3, 8.4, 8.5 and 8.6 |
 | Required | `psr/simple-cache ^3.0` |
 | Optional | `byjg/cache-engine ^7.0` — needed by `CacheEngineLockStore`, and therefore by any real use of `Mutex` |
 
@@ -118,6 +118,18 @@ Tests needing Redis or Memcached skip cleanly when the services are absent, and 
 Mutual exclusion is verified by forking twenty processes at a synchronised barrier and asserting
 exactly one acquires the lock. Sequential assertions cannot distinguish a correct lock from a racy
 one — a naive implementation passes every single-process test that can be written for it.
+
+## Platform and Toolchain
+
+- **PHP** widened to `>=8.3 <8.7`. The previous `<8.6` is exclusive and excluded PHP 8.6.
+- **PHPUnit** pinned to `^12.5`. PHPUnit 13 requires PHP `>=8.4.1`, which breaks the 8.3 floor,
+  and needs `sebastian/diff ^9.0`, which stable Psalm 6.16.1 rejects.
+- **Psalm** moved out of `require-dev` into `tools/psalm/composer.json`. Psalm enumerates the PHP
+  versions it supports and no release lists 8.6, so as a dev dependency it made `composer install`
+  fail on the 8.6 build before any test ran. `composer psalm` bootstraps the tool and runs it.
+- **CI** now builds on 8.6, and Psalm runs in its own job on 8.5 rather than inside the build matrix.
+- `phpunit.xml.dist` renamed to `phpunit.xml`; `psalm.xml` gained `cacheDirectory="/tmp/psalm"`,
+  matching the other components.
 
 ## Links
 
