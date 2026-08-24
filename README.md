@@ -18,7 +18,7 @@ ready yet, and something must only happen once.
 ## Quick Start
 
 ```bash
-composer require byjg/php-resilience
+composer require byjg/resilience
 ```
 
 Wait for something that is not there yet:

@@ -1,5 +1,5 @@
 {
-  "name": "byjg/php-resilience",
+  "name": "byjg/resilience",
   "description": "PHP Resilience library",
   "type": "library",
   "license": "MIT",

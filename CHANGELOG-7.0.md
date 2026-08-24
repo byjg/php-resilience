@@ -2,7 +2,7 @@
 
 ## Overview
 
-First release of `byjg/php-resilience`. There is no earlier version to migrate from — the version
+First release of `byjg/resilience`. There is no earlier version to migrate from — the version
 number starts at 7.0 to line up with [byjg/cache-engine](https://github.com/byjg/php-cache-engine)
 7.0, which supplies the atomic primitive the `Mutex` is built on.
 
