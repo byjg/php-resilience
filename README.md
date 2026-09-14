@@ -1,7 +1,7 @@
 [![Build Status](https://github.com/byjg/php-resilience/actions/workflows/phpunit.yml/badge.svg?branch=master)](https://github.com/byjg/php-resilience/actions/workflows/phpunit.yml)
 [![Opensource ByJG](https://img.shields.io/badge/opensource-byjg-success.svg)](http://opensource.byjg.com)
 [![GitHub source](https://img.shields.io/badge/Github-source-informational?logo=github)](https://github.com/byjg/php-resilience/)
-[![GitHub license](https://img.shields.io/github/license/byjg/php-resilience.svg)](https://opensource.byjg.com/opensource/licensing.html)
+[![GitHub license](https://img.shields.io/github/license/byjg/php-resilience.svg)](https://opensource.byjg.com/license/)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-resilience.svg)](https://github.com/byjg/php-resilience/releases/)
 
 Utilities for the two things that go wrong when work is spread across processes: something is not
