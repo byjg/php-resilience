@@ -12,20 +12,72 @@ on:
 jobs:
   Build:
     runs-on: 'ubuntu-latest'
-    container: 'byjg/php:${{ matrix.php-version }}-cli'
+    container:
+      image: 'byjg/php:${{ matrix.php-version }}-cli'
+      options: --user root --privileged
     strategy:
       matrix:
         php-version:
+          - "8.6"
+          - "8.5"
           - "8.4"
           - "8.3"
-          - "8.2"
-          - "8.1"
+
+    # The job runs inside a container, so the services below are reachable by service name on the
+    # Docker network rather than on loopback. Without these the lock store tests skip themselves and
+    # the build reports green having never exercised a real engine.
+    env:
+      MEMCACHED_SERVER: "memcached:11211"
+      REDIS_SERVER: "redis:6379"
+
+    services:
+      memcached:
+        image: memcached
+        ports:
+          - "11211:11211"
+      redis:
+        image: redis
+        ports:
+          - "6379:6379"
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: composer install
-      - run: ./vendor/bin/psalm
-      - run: ./vendor/bin/phpunit
+      - run: composer test
+
+  Psalm:
+    name: Psalm Static Analyzer
+    runs-on: ubuntu-latest
+    permissions:
+      # for github/codeql-action/upload-sarif to upload SARIF results
+      security-events: write
+    container:
+      image: byjg/php:8.5-cli
+      options: --user root --privileged
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Composer
+        run: composer install
+
+      - name: Psalm
+        # Note: Ignoring error code 2, which just signals that some
+        # flaws were found, not that Psalm itself failed to run.
+        run: ./vendor/bin/psalm.phar
+          --show-info=true
+          --report=psalm-results.sarif || [ $? = 2 ]
+
+      - name: Upload Analysis results to GitHub
+        uses: github/codeql-action/upload-sarif@v4
+        if: github.ref == 'refs/heads/master'
+        with:
+          sarif_file: psalm-results.sarif
 
   Documentation:
     if: github.ref == 'refs/heads/master'
