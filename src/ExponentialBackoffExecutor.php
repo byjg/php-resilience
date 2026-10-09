@@ -16,7 +16,7 @@ class ExponentialBackoffExecutor
     /**
      * Execute an object or class method with attribute-aware exponential backoff.
      *
-     * @param object|string $classOrObject  Instance for instance method, or class-string for static method
+     * @param object|class-string $classOrObject  Instance for instance method, or class-string for static method
      * @param string $method                Method name
      * @param array $args                   Arguments passed to the method
      * @param callable(mixed):bool|null $isSuccess Optional success predicate; defaults to value !== null

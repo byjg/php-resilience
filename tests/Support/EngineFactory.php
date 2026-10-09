@@ -1,6 +1,6 @@
 <?php
 
-namespace ByJG\Resilience\Tests\Support;
+namespace Tests\Support;
 
 use ByJG\Cache\CompareAndSwapInterface;
 use ByJG\Cache\Psr16\BaseCacheEngine;

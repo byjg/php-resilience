@@ -1,12 +1,12 @@
 <?php
 
-namespace ByJG\Resilience\Tests;
+namespace Tests;
 
 use ByJG\Resilience\Attributes\Mutex as MutexAttribute;
 use ByJG\Resilience\ExponentialBackoffWaiter;
 use ByJG\Resilience\Mutex;
 use ByJG\Resilience\MutexExecutor;
-use ByJG\Resilience\Tests\Support\ArrayLockStore;
+use Tests\Support\ArrayLockStore;
 use PHPUnit\Framework\TestCase;
 
 class ServiceWithMutex

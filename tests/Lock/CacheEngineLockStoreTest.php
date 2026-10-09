@@ -1,12 +1,12 @@
 <?php
 
-namespace ByJG\Resilience\Tests\Lock;
+namespace Tests\Lock;
 
 use ByJG\Resilience\Lock\CacheEngineLockStore;
 use ByJG\Resilience\Lock\LockStoreInterface;
 use ByJG\Resilience\Mutex;
-use ByJG\Resilience\Tests\Support\EngineFactory;
-use ByJG\Resilience\Tests\Support\RecordingCasEngine;
+use Tests\Support\EngineFactory;
+use Tests\Support\RecordingCasEngine;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 

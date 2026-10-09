@@ -46,30 +46,38 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - run: composer install
-      - run: ./vendor/bin/phpunit
+      - run: composer test
 
   Psalm:
     name: Psalm Static Analyzer
     runs-on: ubuntu-latest
+    permissions:
+      # for github/codeql-action/upload-sarif to upload SARIF results
+      security-events: write
     container:
       image: byjg/php:8.5-cli
       options: --user root --privileged
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - name: Composer
         run: composer install
 
-      - name: Composer (psalm)
-        run: composer --working-dir=tools/psalm update --no-interaction
-
       - name: Psalm
         # Note: Ignoring error code 2, which just signals that some
         # flaws were found, not that Psalm itself failed to run.
-        run: ./tools/psalm/vendor/bin/psalm || [ $? = 2 ]
+        run: ./vendor/bin/psalm.phar
+          --show-info=true
+          --report=psalm-results.sarif || [ $? = 2 ]
+
+      - name: Upload Analysis results to GitHub
+        uses: github/codeql-action/upload-sarif@v4
+        if: github.ref == 'refs/heads/master'
+        with:
+          sarif_file: psalm-results.sarif
 
   Documentation:
     if: github.ref == 'refs/heads/master'

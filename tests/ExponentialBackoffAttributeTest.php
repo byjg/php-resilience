@@ -1,6 +1,6 @@
 <?php
 
-namespace ByJG\Resilience\Tests;
+namespace Tests;
 
 use ByJG\Resilience\Attributes\ExponentialBackoff;
 use ByJG\Resilience\ExponentialBackoffExecutor;

@@ -9,17 +9,15 @@
   },
   "require-dev": {
     "byjg/cache-engine": "^7.0",
-    "phpunit/phpunit": "^12.5"
+    "phpunit/phpunit": "^12.5",
+    "psalm/phar": "^6.16"
   },
   "suggest": {
     "byjg/cache-engine": "Provides CompareAndSwapInterface, the atomic primitive CacheEngineLockStore needs for a race-free Mutex"
   },
   "scripts": {
     "test": "vendor/bin/phpunit",
-    "psalm": [
-      "@composer --working-dir=tools/psalm update --no-interaction",
-      "tools/psalm/vendor/bin/psalm"
-    ]
+    "psalm": "vendor/bin/psalm.phar"
   },
   "autoload": {
     "psr-4": {
@@ -28,7 +26,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "ByJG\\Resilience\\Tests\\": "tests/"
+      "Tests\\": "tests/"
     }
   },
   "minimum-stability": "dev",

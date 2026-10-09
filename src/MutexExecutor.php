@@ -16,7 +16,7 @@ class MutexExecutor
     /**
      * Execute an object or class method with attribute-aware mutex guard.
      *
-     * @param object|string $classOrObject Instance for instance method, or class-string for static method
+     * @param object|class-string $classOrObject Instance for instance method, or class-string for static method
      * @param string $method Method name
      * @param array $args Arguments passed to the method
      * @param Mutex $mutex The mutex instance to use (must be constructed with a PSR-16 cache store)

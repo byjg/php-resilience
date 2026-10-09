@@ -1,5 +1,8 @@
 # Changelog - Version 7.0
 
+> **Status: in development.** This document tracks changes landing on the `7.0` branch.
+> Nothing here is released yet, and the contents may still change.
+
 ## Overview
 
 First release of `byjg/resilience`. There is no earlier version to migrate from — the version
@@ -122,11 +125,12 @@ one — a naive implementation passes every single-process test that can be writ
 ## Platform and Toolchain
 
 - **PHP** widened to `>=8.3 <8.7`. The previous `<8.6` is exclusive and excluded PHP 8.6.
-- **PHPUnit** pinned to `^12.5`. PHPUnit 13 requires PHP `>=8.4.1`, which breaks the 8.3 floor,
-  and needs `sebastian/diff ^9.0`, which stable Psalm 6.16.1 rejects.
-- **Psalm** moved out of `require-dev` into `tools/psalm/composer.json`. Psalm enumerates the PHP
+- **PHPUnit** pinned to `^12.5`. PHPUnit 13 requires PHP `>=8.4.1`, which breaks the 8.3 floor.
+- **Psalm** is installed as `psalm/phar` instead of `vimeo/psalm`. `vimeo/psalm` lists the PHP
   versions it supports and no release lists 8.6, so as a dev dependency it made `composer install`
-  fail on the 8.6 build before any test ran. `composer psalm` bootstraps the tool and runs it.
+  fail on the 8.6 build before any test ran. `psalm/phar` requires only `php ^8.2` and bundles its
+  own dependencies, so it installs on every PHP version in the matrix; Psalm itself still does not
+  run on 8.6, so its job uses 8.5. `composer psalm` runs it.
 - **CI** now builds on 8.6, and Psalm runs in its own job on 8.5 rather than inside the build matrix.
 - `phpunit.xml.dist` renamed to `phpunit.xml`; `psalm.xml` gained `cacheDirectory="/tmp/psalm"`,
   matching the other components.

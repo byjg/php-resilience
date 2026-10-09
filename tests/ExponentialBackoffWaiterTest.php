@@ -1,6 +1,6 @@
 <?php
 
-namespace ByJG\Resilience\Tests;
+namespace Tests;
 
 use ByJG\Resilience\ExponentialBackoffWaiter;
 use ByJG\Resilience\Jitter;

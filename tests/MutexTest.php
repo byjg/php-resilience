@@ -1,10 +1,10 @@
 <?php
 
-namespace ByJG\Resilience\Tests;
+namespace Tests;
 
 use ByJG\Resilience\ExponentialBackoffWaiter;
 use ByJG\Resilience\Mutex;
-use ByJG\Resilience\Tests\Support\ArrayLockStore;
+use Tests\Support\ArrayLockStore;
 use PHPUnit\Framework\TestCase;
 
 class MutexTest extends TestCase
