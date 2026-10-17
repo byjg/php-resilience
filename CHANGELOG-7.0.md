@@ -44,6 +44,10 @@ delay run its full 3200 ms would return after 6.2 s — nearly double what the c
 `sleepFn` and `timeFn` are injectable, so a suite covering a multi-second policy runs instantly on a
 virtual clock.
 
+The `jitter` parameter takes the `Jitter` enum (`None`, the default, `Full` or `Equal`) and randomises
+each sleep so concurrent callers do not retry in lockstep; the delay series itself still grows
+deterministically and the total budget still holds. `randomFn` is injectable for deterministic tests.
+
 ### Mutex
 
 A named lock with an owner token and a TTL for crash recovery. `tryAcquire` (non-blocking),
@@ -98,7 +102,7 @@ propagates immediately with no retry. That is the right shape for "the record ha
 yet" and the wrong shape for "the HTTP call returned 503", which needs to know which exceptions are
 retryable and which will fail identically forever.
 
-Retry-on-exception, jitter, and circuit breaking are not part of this release.
+Retry-on-exception and circuit breaking are not part of this release.
 
 ## Documentation
 

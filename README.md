@@ -26,10 +26,6 @@ ready yet, and something must only happen once.
 
 ## Quick Start
 
-```bash
-composer require byjg/resilience
-```
-
 Wait for something that is not there yet:
 
 ```php
@@ -76,6 +72,12 @@ composer require byjg/cache-engine
 
 A plain PSR-16 cache is deliberately not accepted — see
 [Lock Stores](docs/lock-stores.md#why-a-plain-psr-16-cache-is-not-accepted) for why.
+
+## Installation
+
+```bash
+composer require byjg/resilience
+```
 
 ## Running Tests
 
