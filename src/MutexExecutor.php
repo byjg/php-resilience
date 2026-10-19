@@ -3,6 +3,7 @@
 namespace ByJG\Resilience;
 
 use ByJG\Resilience\Attributes\Mutex as MutexAttribute;
+use Closure;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
@@ -16,13 +17,18 @@ class MutexExecutor
     /**
      * Execute an object or class method with attribute-aware mutex guard.
      *
+     * Without a Mutex attribute on the method, it is invoked directly and the mutex is not used.
+     *
      * @param object|class-string $classOrObject Instance for instance method, or class-string for static method
      * @param string $method Method name
+     * @param Mutex $mutex The mutex to lock with (backed by the LockStoreInterface it was constructed with)
      * @param array $args Arguments passed to the method
-     * @param Mutex $mutex The mutex instance to use (must be constructed with a PSR-16 cache store)
-     * @param ExponentialBackoffWaiter|null $waiterOverride Optional waiter to override timing (useful for tests)
-     * @return mixed|null Returns method result; if lock not acquired and throwOnTimeout=false, returns null.
-     * @throws ReflectionException
+     * @param ExponentialBackoffWaiter|null $waiterOverride Optional waiter to override the acquire timing
+     *        (useful for tests); when null, Mutex::acquire() uses a default ExponentialBackoffWaiter
+     * @return mixed Returns the method result; null without running the method if the lock was not
+     *         acquired and the attribute's throwOnTimeout is false.
+     * @throws ReflectionException When the method does not exist
+     * @throws \ByJG\Resilience\Exceptions\TimeoutException When the lock was not acquired and the attribute's throwOnTimeout is true
      */
     public static function callWithAttributes(
         object|string $classOrObject,
@@ -59,17 +65,23 @@ class MutexExecutor
     }
 
     /**
-     * Execute a global function with attribute-aware mutex guard.
-     * If the function has no attribute, it is invoked directly.
+     * Execute any callable with attribute-aware mutex guard.
+     * If the callable has no attribute, it is invoked directly.
      *
-     * Note: Attributes on closures are not supported by PHP.
+     * The attribute is read from whatever the callable points to: a function name ('fn'), a static
+     * method ('ClassName::method' or [ClassName::class, 'method']), an instance method
+     * ([$object, 'method'] or $object->method(...)), a closure declared with the attribute
+     * (#[Mutex(...)] fn() => ...) or an invokable object (attribute on __invoke).
      *
-     * @param callable $functionCallable A string function name or [ClassName, 'method'] for static methods.
+     * @param callable $functionCallable Any callable.
+     * @param Mutex $mutex The mutex to lock with (backed by the LockStoreInterface it was constructed with)
      * @param array $args Arguments passed to the function.
-     * @param Mutex $mutex The mutex instance to use.
-     * @param ExponentialBackoffWaiter|null $waiterOverride Optional waiter to override timing (useful for tests)
-     * @return mixed|null
+     * @param ExponentialBackoffWaiter|null $waiterOverride Optional waiter to override the acquire timing
+     *        (useful for tests); when null, Mutex::acquire() uses a default ExponentialBackoffWaiter
+     * @return mixed Returns the function result; null without running the function if the lock was not
+     *         acquired and the attribute's throwOnTimeout is false.
      * @throws ReflectionException
+     * @throws \ByJG\Resilience\Exceptions\TimeoutException When the lock was not acquired and the attribute's throwOnTimeout is true
      */
     public static function callFunctionWithAttributes(
         callable $functionCallable,
@@ -77,33 +89,30 @@ class MutexExecutor
         array $args = [],
         ?ExponentialBackoffWaiter $waiterOverride = null
     ): mixed {
-        if (is_string($functionCallable)) {
-            $refFunction = new ReflectionFunction($functionCallable);
-            $attr = self::findAttribute($refFunction);
-            if ($attr === null) {
-                return $refFunction->invokeArgs($args);
-            }
-
-            $token = $mutex->acquire(
-                name: $attr->name,
-                ttlSeconds: $attr->ttlSeconds,
-                waiter: $waiterOverride,
-                throwOnTimeout: $attr->throwOnTimeout
-            );
-
-            if (!is_string($token)) {
-                return null;
-            }
-
-            try {
-                return $refFunction->invokeArgs($args);
-            } finally {
-                $mutex->release($attr->name, $token);
-            }
+        // Closure::fromCallable() normalises every callable form, and reflecting the closure exposes
+        // the attributes of the function or method it wraps.
+        $refFunction = new ReflectionFunction(Closure::fromCallable($functionCallable));
+        $attr = self::findAttribute($refFunction);
+        if ($attr === null) {
+            return $refFunction->invokeArgs($args);
         }
 
-        // For other callable types (like closures), attributes aren't reflected; just invoke directly
-        return $functionCallable(...$args);
+        $token = $mutex->acquire(
+            name: $attr->name,
+            ttlSeconds: $attr->ttlSeconds,
+            waiter: $waiterOverride,
+            throwOnTimeout: $attr->throwOnTimeout
+        );
+
+        if (!is_string($token)) {
+            return null;
+        }
+
+        try {
+            return $refFunction->invokeArgs($args);
+        } finally {
+            $mutex->release($attr->name, $token);
+        }
     }
 
     private static function findAttribute(ReflectionMethod|ReflectionFunction $ref): ?MutexAttribute

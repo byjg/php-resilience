@@ -113,9 +113,10 @@ ExponentialBackoffExecutor::callWithAttributes($svc, 'fetch', waiterOverride: $f
 Combined with the waiter's injectable clock, this lets a test cover a multi-second backoff policy
 in virtual time — see [Testing without real delays](exponential-backoff.md#testing-without-real-delays).
 
-## Standalone functions
+## Any callable
 
-Both executors have a `callFunctionWithAttributes()` variant for named global functions:
+Both executors have a `callFunctionWithAttributes()` variant that takes any callable and reads the
+attribute from whatever it points to:
 
 ```php
 #[ExponentialBackoff(maxTotalWaitMicros: 1_000_000)]
@@ -124,9 +125,16 @@ function fetchRemoteFlag(): ?bool { /* ... */ }
 $flag = ExponentialBackoffExecutor::callFunctionWithAttributes('fetchRemoteFlag');
 ```
 
-**Closures cannot carry attributes** — that is a PHP limitation, not a library one. Passing a
-closure to `callFunctionWithAttributes()` invokes it directly with no retry and no locking, silently.
-For a closure, use `ExponentialBackoffWaiter::wait()` or `Mutex::execute()` directly.
+| Callable form | Example | Attribute read from |
+|---|---|---|
+| Function name | `'fetchRemoteFlag'` | the function |
+| Static method string | `'ReportService::fetchStatic'` | the method |
+| Array callable | `[ReportService::class, 'fetchStatic']`, `[$svc, 'fetch']` | the method |
+| First-class callable | `$svc->fetch(...)` | the method |
+| Closure | `#[ExponentialBackoff] fn() => $repo->get($id)` | the closure itself |
+| Invokable object | `new FetchReport()` | its `__invoke()` method |
+
+As with methods, a callable with no attribute is invoked directly — no retry, no locking.
 
 ## Use named arguments
 

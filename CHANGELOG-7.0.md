@@ -75,6 +75,13 @@ a token match.
 `MutexExecutor`. Attributes are metadata: calling the method directly bypasses them entirely, and
 the executor is what reads and honours them.
 
+`callFunctionWithAttributes()` on both executors honours the attribute on every callable form: a
+function name, a `'Class::method'` string, an array callable (`[Class::class, 'method']` or
+`[$object, 'method']`), a first-class callable, a closure declared with the attribute, and an
+invokable object (attribute on `__invoke()`). Earlier drafts reflected only a function-name string:
+a `'Class::method'` string threw `ReflectionException`, and every other form silently ran once with
+no retry and no locking.
+
 ## Design Decisions Worth Knowing
 
 ### A plain PSR-16 cache is not accepted by `Mutex`
