@@ -121,7 +121,7 @@ If you write one, test it with concurrent processes rather than sequential asser
 a race in it passes every single-process test you can write; forking twenty children at a
 synchronised barrier and asserting exactly one winner is what actually distinguishes them.
 
-## What this does not guarantee {#what-this-does-not-guarantee}
+## What this does not guarantee
 
 A correct `acquireIfAbsent()` gives you one thing: at most one holder at a time. Everything else you
 might want from a lock, it does not provide.
