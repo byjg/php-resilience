@@ -1,5 +1,6 @@
 ---
 sidebar_key: resilience
+sidebar_category: infrastructure
 tags: [php, concurrency]
 ---
 
