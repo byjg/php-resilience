@@ -16,6 +16,21 @@ ready yet, and something must only happen once.
 [![GitHub license](https://img.shields.io/github/license/byjg/php-resilience.svg)](https://opensource.byjg.com/license/)
 [![GitHub release](https://img.shields.io/github/release/byjg/php-resilience.svg)](https://github.com/byjg/php-resilience/releases/)
 
+## Why
+
+Both problems usually get a quick fix: `sleep()` in a loop, or a "lock" made of a cache key.
+The loop waits too long or not long enough and makes tests slow; the cache-key lock lets two
+processes run at once, or stays locked forever after a crash.
+
+- **A lock that is actually a lock.** `Mutex` is built on an atomic set-if-absent, with an
+  owner token so a process only releases its own lock, and a TTL so a crashed process does
+  not hold it forever.
+- **Waiting with a real ceiling.** `ExponentialBackoffWaiter` grows the delay and stops at a
+  maximum total wait, not after a fixed number of tries.
+- **Tested in virtual time.** The clock and the sleep are injectable, so a policy that waits
+  seconds in production is verified in milliseconds.
+- **Declarative.** `#[ExponentialBackoff]` and `#[Mutex]` attach either policy to a method.
+
 ## Key Features
 
 - **Exponential backoff** - poll for a value with a growing delay and a real ceiling on total wait time
